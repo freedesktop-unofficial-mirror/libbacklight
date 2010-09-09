@@ -18,4 +18,5 @@ struct backlight *backlight_init(struct pci_device *dev, int card,
 				 int connector_type, int connector_type_id);
 long backlight_get_brightness(struct backlight *backlight);
 long backlight_get_max_brightness(struct backlight *backlight);
+long backlight_get_actual_brightness(struct backlight *backlight);
 long backlight_set_brightness(struct backlight *backlight, long brightness);
