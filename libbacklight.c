@@ -96,6 +96,7 @@ long backlight_set_brightness(struct backlight *backlight, long brightness)
 	}
 
 	ret = backlight_get_brightness(backlight);
+	backlight->brightness = ret;
 out:
 	if (buffer)
 		free(buffer);
