@@ -3,25 +3,29 @@
 #include <libbacklight.h>
 #include <stdio.h>
 #include <sys/types.h>
+#include <linux/types.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <drm/drm_mode.h>
 #include <fcntl.h>
 #include <malloc.h>
 #include <string.h>
 
-static const char *output_names[] = { "None",
+static const char *output_names[] = { "Unknown",
                                       "VGA",
-                                      "DVI",
-                                      "DVI",
-                                      "DVI",
+                                      "DVI-I",
+                                      "DVI-D",
+                                      "DVI-A",
                                       "Composite",
-                                      "TV",
+                                      "SVIDEO",
                                       "LVDS",
-                                      "CTV",
-                                      "DIN",
-                                      "DP",
-                                      "HDMI",
-                                      "HDMI",
+                                      "Component",
+                                      "9-pin DIN",
+				      "DisplayPort"
+                                      "HDMI Type A",
+                                      "HDMI Type B",
+                                      "TV",
+				      "Embedded DisplayPort"
 };
 
 static long backlight_get(struct backlight *backlight, char *node)
@@ -178,6 +182,15 @@ struct backlight *backlight_init(struct pci_device *dev, int card,
 			goto out;
 
 		free (path);
+
+		if (connector_type != DRM_MODE_CONNECTOR_LVDS &&
+		    connector_type != DRM_MODE_CONNECTOR_eDP) {
+			/* External displays are assumed to require
+			   gpu control at the moment */
+			if (entry_type != BACKLIGHT_RAW)
+				continue;
+		}
+
 		asprintf(&path, "%s/%s", backlight_path, "device");
 		ret = readlink(path, buffer, sizeof(buffer));
 
