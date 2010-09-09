@@ -13,6 +13,7 @@ struct backlight {
 	enum backlight_type type;
 };
 
+void backlight_destroy(struct backlight *backlight);
 struct backlight *backlight_init(struct pci_device *dev, int card,
 				 int connector_type, int connector_type_id);
 long backlight_get_brightness(struct backlight *backlight);

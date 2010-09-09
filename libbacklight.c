@@ -105,6 +105,17 @@ out:
 	return ret;
 }
 
+void backlight_destroy(struct backlight *backlight)
+{
+	if (!backlight)
+		return;
+
+	if (backlight->path)
+		free(backlight->path);
+
+	free(backlight);
+}
+
 struct backlight *backlight_init(struct pci_device *dev, int card,
 				 int connector_type, int connector_type_id)
 {
@@ -171,6 +182,8 @@ struct backlight *backlight_init(struct pci_device *dev, int card,
 
 		if (ret < 0)
 			goto out;
+
+		buffer[ret] = '\0';
 
 		parent = basename(buffer);
 
