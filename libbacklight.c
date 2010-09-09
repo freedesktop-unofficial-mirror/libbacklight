@@ -108,8 +108,8 @@ out:
 struct backlight *backlight_init(struct pci_device *dev, int card,
 				 int connector_type, int connector_type_id)
 {
-	char *pci_name;
-	char *drm_name;
+	char *pci_name = NULL;
+	char *drm_name = NULL;
 	char *chosen_path = NULL;
 	DIR *backlights;
 	struct dirent *entry;
@@ -117,10 +117,13 @@ struct backlight *backlight_init(struct pci_device *dev, int card,
 	char buffer[100];
 	struct backlight *backlight;
 
-	asprintf(&pci_name, "%04x:%02x:%02x.%d", dev->domain, dev->bus,
-		 dev->dev, dev->func);
-	asprintf(&drm_name, "card%d-%s-%d", card, output_names[connector_type],
-		 connector_type_id);
+	if (dev)
+		asprintf(&pci_name, "%04x:%02x:%02x.%d", dev->domain, dev->bus,
+			 dev->dev, dev->func);
+
+	if (card || connector_type || connector_type_id)
+		asprintf(&drm_name, "card%d-%s-%d", card,
+			 output_names[connector_type], connector_type_id);
 
 	backlights = opendir("/sys/class/backlight");
 
@@ -172,8 +175,8 @@ struct backlight *backlight_init(struct pci_device *dev, int card,
 		parent = basename(buffer);
 
 		if (entry_type == BACKLIGHT_RAW) {
-			if (strcmp(drm_name, parent) &&
-			    strcmp(pci_name, parent)) {
+			if ((drm_name && strcmp(drm_name, parent)) &&
+			    (pci_name && strcmp(pci_name, parent))) {
 				goto out;
 			}
 		}
@@ -184,7 +187,7 @@ struct backlight *backlight_init(struct pci_device *dev, int card,
 			ret = sscanf(parent, "%04x:%02x:%02x.%u", &domain, &bus,
 				     &device, &function);
 			if (ret == 4) {                   
-				if (strcmp(pci_name, parent))
+				if (pci_name && strcmp(pci_name, parent))
 					goto out;
 			}
 		}
@@ -222,8 +225,18 @@ struct backlight *backlight_init(struct pci_device *dev, int card,
 	if (backlight->brightness < 0)
 		goto err;
 
+	if (pci_name)
+		free(pci_name);
+			
+	if (drm_name)
+		free(drm_name);
+
 	return backlight;
 err:
+	if (pci_name)
+		free(pci_name);
+	if (drm_name)
+		free(drm_name);
 	if (chosen_path)
 		free(chosen_path);
 	free (backlight);
