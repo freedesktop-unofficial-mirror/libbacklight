@@ -11,6 +11,6 @@ AM_SILENT_RULES([yes])
 
 AC_PROG_CC
 AC_PROG_LIBTOOL
-PKG_CHECK_MODULES([PCIACCESS], [pciaccess >= 0.11.0])
+PKG_CHECK_MODULES([PCIACCESS], [pciaccess >= 0.10.0])
 AC_CONFIG_FILES([Makefile libbacklight.pc])
 AC_OUTPUT
