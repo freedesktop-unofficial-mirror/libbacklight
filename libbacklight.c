@@ -210,16 +210,15 @@ struct backlight *backlight_init(struct pci_device *dev, int card,
 		else
 			goto out;
 
-		free (path);
-
 		if (connector_type != DRM_MODE_CONNECTOR_LVDS &&
 		    connector_type != DRM_MODE_CONNECTOR_eDP) {
 			/* External displays are assumed to require
 			   gpu control at the moment */
 			if (entry_type != BACKLIGHT_RAW)
-				continue;
+				goto out;
 		}
 
+		free (path);
 		asprintf(&path, "%s/%s", backlight_path, "device");
 		ret = readlink(path, buffer, sizeof(buffer));
 
