@@ -175,6 +175,22 @@ struct backlight *backlight_init(struct pci_device *dev, int card,
 	if (!backlights)
 		return NULL;
 
+	/* Find the "best" backlight for the device. Firmware
+	   interfaces are preferred over platform interfaces are
+	   preferred over raw interfaces. For raw interfaces we'll
+	   match if either the pci ID or the output ID match, while
+	   for firmware interfaces we require the pci ID to
+	   match. It's assumed that platform interfaces always match,
+	   since we can't actually associate them with IDs.
+
+	   A further awkwardness is that, while it's theoretically
+	   possible for an ACPI interface to include support for
+	   changing the backlight of external devices, it's unlikely
+	   to ever be done. It's effectively impossible for a platform
+	   interface to do so. So if we get asked about anything that
+	   isn't LVDS or eDP, we pretty much have to require that the
+	   control be supplied via a raw interface */
+
 	while ((entry = readdir(backlights))) {
 		char *backlight_path;
 		char *parent;
@@ -229,22 +245,13 @@ struct backlight *backlight_init(struct pci_device *dev, int card,
 
 		parent = basename(buffer);
 
-		if (entry_type == BACKLIGHT_RAW) {
-			if ((drm_name && strcmp(drm_name, parent)) &&
-			    (pci_name && strcmp(pci_name, parent))) {
+		/* Perform matching for raw and firmware backlights - 
+		   platform backlights have to be assumed to match */
+		if (entry_type == BACKLIGHT_RAW ||
+		    entry_type == BACKLIGHT_FIRMWARE) {
+			if (!((drm_name && !strcmp(drm_name, parent)) ||
+			      (pci_name && !strcmp(pci_name, parent))))
 				goto out;
-			}
-		}
-
-		if (entry_type == BACKLIGHT_FIRMWARE) {                   
-			/* Older kernels won't provide a valid path here... */
-			unsigned int domain, bus, device, function;
-			ret = sscanf(parent, "%04x:%02x:%02x.%u", &domain, &bus,
-				     &device, &function);
-			if (ret == 4) {                   
-				if (pci_name && strcmp(pci_name, parent))
-					goto out;
-			}
 		}
 
 		if (entry_type < type)
