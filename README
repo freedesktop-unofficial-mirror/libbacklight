@@ -1,0 +1,30 @@
+libbacklight provides an abstraction layer that allows applications to
+identify the appropriate Linux backlight device for their use. The API is
+straightforward.
+
+struct backlight *backlight = backlight_init(dev, card, connector_type,
+       		        		 	     connector_type_id);
+
+You must provide either dev and/or card, connector_type and connector_type_id.
+dev is a pciaccess struct pci_device representing your card. This will find
+the backlight device associated with your pci device. card is the drm card
+number. connector_type is the drm connector type. connector_type_id is the
+specific instance of that connector_type on the given card.
+
+libbacklight will then scan all available backlight devices, looking for a
+device that matches the given constraints. In general, if the connector type
+is LVDS or eDP then a firmware device will be preferred if available - if
+not, a platform device will be chosen, and finally a raw device. Firmware
+and raw devices will be ignored unless their parents match the PCI device
+or connector provided. For non-LVDS/eDP devices, platform devices will
+typically not be used.
+
+Once a backlight structure has been provided it can be queried via:
+
+backlight_get_max_brightness() (provides the maximum brightness)
+backlight_get_brightness() (provides the cached brightness)
+backlight_get_actual_brightness() (provides the brightness as reported by the
+				   device)
+backlight_set_brightness() (sets the brightness to a value between 0 and max)
+
+backlight_destroy() will free the resources associated with the device.
