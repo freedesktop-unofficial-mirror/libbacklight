@@ -167,7 +167,7 @@ struct backlight *backlight_init(struct pci_device *dev, int card,
 		asprintf(&pci_name, "%04x:%02x:%02x.%d", dev->domain, dev->bus,
 			 dev->dev, dev->func);
 
-	if (card || connector_type || connector_type_id)
+	if (card)
 		asprintf(&drm_name, "card%d-%s-%d", card,
 			 output_names[connector_type], connector_type_id);
 
