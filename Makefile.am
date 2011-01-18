@@ -1,3 +1,5 @@
+dist_doc_DATA = README COPYING
+
 include_HEADERS = libbacklight.h
 lib_LTLIBRARIES = libbacklight.la
 libbacklight_la_SOURCES = libbacklight.c libbacklight.h
