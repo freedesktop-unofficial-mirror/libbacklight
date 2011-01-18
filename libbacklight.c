@@ -39,6 +39,7 @@
 #include <fcntl.h>
 #include <malloc.h>
 #include <string.h>
+#include <unistd.h>
 
 static const char *output_names[] = { "Unknown",
                                       "VGA",
