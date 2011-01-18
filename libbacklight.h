@@ -1,5 +1,9 @@
 #include <pciaccess.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif 
+
 enum backlight_type {
 	BACKLIGHT_RAW,
 	BACKLIGHT_PLATFORM,
@@ -20,3 +24,7 @@ long backlight_get_brightness(struct backlight *backlight);
 long backlight_get_max_brightness(struct backlight *backlight);
 long backlight_get_actual_brightness(struct backlight *backlight);
 long backlight_set_brightness(struct backlight *backlight, long brightness);
+
+#ifdef __cplusplus
+}
+#endif
