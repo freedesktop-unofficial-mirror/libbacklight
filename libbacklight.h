@@ -1,3 +1,5 @@
+#ifndef LIBBACKLIGHT_H
+#define LIBBACKLIGHT_H
 #include <pciaccess.h>
 
 #ifdef __cplusplus
@@ -42,3 +44,5 @@ long backlight_set_brightness(struct backlight *backlight, long brightness);
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* LIBBACKLIGHT_H */
