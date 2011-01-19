@@ -41,6 +41,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <errno.h>
 
 static const char *output_names[] = { "Unknown",
                                       "VGA",
@@ -66,7 +67,9 @@ static long backlight_get(struct backlight *backlight, char *node)
 	int fd;
 	long value, ret;
 
-	asprintf(&path, "%s/%s", backlight->path, node);
+	if (asprintf(&path, "%s/%s", backlight->path, node) < 0)
+		return -ENOMEM
+;
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
 		ret = -1;
@@ -108,9 +111,11 @@ long backlight_set_brightness(struct backlight *backlight, long brightness)
 	char *path;
 	char *buffer = NULL;
 	int fd;
-	long value, ret;
+	long ret;
 
-	asprintf(&path, "%s/%s", backlight->path, "brightness");
+	if (asprintf(&path, "%s/%s", backlight->path, "brightness") < 0)
+		return -ENOMEM;
+
 	fd = open(path, O_RDWR);
 	if (fd < 0) {
 		ret = -1;
@@ -123,7 +128,9 @@ long backlight_set_brightness(struct backlight *backlight, long brightness)
 		goto out;
 	}
 
-	asprintf(&buffer, "%ld", brightness);
+	if (asprintf(&buffer, "%ld", brightness) < 0)
+		return -ENOMEM;
+
 	ret = write(fd, buffer, strlen(buffer));
 	if (ret < 0) {
 		ret = -1;
@@ -163,14 +170,21 @@ struct backlight *backlight_init(struct pci_device *dev, int card,
 	enum backlight_type type = 0;
 	char buffer[100];
 	struct backlight *backlight;
+	int err;
 
-	if (dev)
-		asprintf(&pci_name, "%04x:%02x:%02x.%d", dev->domain, dev->bus,
-			 dev->dev, dev->func);
+	if (dev) {
+		err = asprintf(&pci_name, "%04x:%02x:%02x.%d", dev->domain,
+			       dev->bus, dev->dev, dev->func);
+		if (err < 0)
+			return NULL;
+	}
 
-	if (card)
-		asprintf(&drm_name, "card%d-%s-%d", card,
-			 output_names[connector_type], connector_type_id);
+	if (card) {
+		err = asprintf(&drm_name, "card%d-%s-%d", card,
+			       output_names[connector_type], connector_type_id);
+		if (err < 0)
+			return NULL;
+	}
 
 	backlights = opendir("/sys/class/backlight");
 
@@ -203,9 +217,13 @@ struct backlight *backlight_init(struct pci_device *dev, int card,
 		if (entry->d_name[0] == '.')
 			continue;
 
-		asprintf(&backlight_path, "%s/%s", "/sys/class/backlight",
-			 entry->d_name);
-		asprintf(&path, "%s/%s", backlight_path, "type");
+		if (asprintf(&backlight_path, "%s/%s", "/sys/class/backlight",
+			     entry->d_name) < 0)
+			return NULL;
+
+		if (asprintf(&path, "%s/%s", backlight_path, "type") < 0)
+			return NULL;
+
 		fd = open(path, O_RDONLY);
 
 		if (fd < 0)
@@ -237,7 +255,10 @@ struct backlight *backlight_init(struct pci_device *dev, int card,
 		}
 
 		free (path);
-		asprintf(&path, "%s/%s", backlight_path, "device");
+
+		if (asprintf(&path, "%s/%s", backlight_path, "device") < 0)
+			return NULL;
+
 		ret = readlink(path, buffer, sizeof(buffer));
 
 		if (ret < 0)
